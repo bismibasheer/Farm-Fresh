@@ -1,0 +1,133 @@
+
+
+<?php $__env->startSection('content'); ?>
+<div class="content-wrapper">
+    <div class="row">
+        <div class="col-lg-12 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <center>
+                        <h4 class="card-title" style="color: #388e3c;">Monthly Total Sales Chart</h4>
+                    </center>
+
+                    <!-- Month & Year Selection Form -->
+                    <form method="GET" action="<?php echo e(route('monthlySalesChart')); ?>">
+                        <div class="row">
+                            <!-- Month Selection -->
+                            <div class="col-md-4">
+                                <label for="month">Select Month:</label>
+                                <select name="month" class="form-control" id="month">
+                                    <option value="">All Months</option>
+                                    <?php for($m = 1; $m <= 12; $m++): ?>
+                                        <option value="<?php echo e($m); ?>" <?php echo e($m == $month ? 'selected' : ''); ?>>
+                                            <?php echo e(date('F', mktime(0, 0, 0, $m, 1))); ?>
+
+                                        </option>
+                                    <?php endfor; ?>
+                                </select>
+                            </div>
+
+                            <!-- Year Selection -->
+                            <div class="col-md-4">
+                                <label for="year">Select Year:</label>
+                                <select name="year" class="form-control" id="year">
+                                    <?php for($y = date('Y') - 5; $y <= date('Y'); $y++): ?>
+                                        <option value="<?php echo e($y); ?>" <?php echo e($y == $year ? 'selected' : ''); ?>>
+                                            <?php echo e($y); ?>
+
+                                        </option>
+                                    <?php endfor; ?>
+                                </select>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="col-md-2">
+                                <br>
+                                <button type="submit" class="btn btn-success">Filter</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <hr>
+
+                    <!-- Chart Canvas -->
+                    <div style="width: 70%; margin: auto;">
+                        <canvas id="monthlySalesChart" width="300" height="150"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js & Datalabels Plugin -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+
+<script>
+    // Prepare the chart data
+    const ctx = document.getElementById('monthlySalesChart').getContext('2d');
+
+    // Fetch data passed from the controller
+    const months = <?php echo json_encode($monthlySales->pluck('month'), 15, 512) ?>;
+    const totalSales = <?php echo json_encode($monthlySales->pluck('total_sales'), 15, 512) ?>;
+
+    // Prepare month names dynamically
+    const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    const monthLabels = months.map(m => monthNames[m - 1]);
+
+    // Generate the bar chart
+    const monthlySalesChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: monthLabels, // X-axis: Month Names
+            datasets: [{
+                label: 'Total Sales Amount for <?php echo e($year); ?>',
+                data: totalSales, // Y-axis: Total Sales
+                backgroundColor: 'rgba(76, 175, 80, 0.6)', // Light Green
+                borderColor: 'rgba(56, 142, 60, 1)', // Dark Green
+                borderWidth: 1
+            }]
+        },
+        plugins: [ChartDataLabels], // Enable Datalabels plugin
+        options: {
+            responsive: true,
+            maintainAspectRatio: false, // Allow resizing
+            plugins: {
+                datalabels: {
+                    anchor: 'end',
+                    align: 'top',
+                    color: '#000',
+                    font: {
+                        weight: 'bold',
+                        size: 12
+                    },
+                    formatter: function(value) {
+                        return '$' + value.toLocaleString(); // Format as currency
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Sales Amount ($)'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Months'
+                    }
+                }
+            }
+        }
+    });
+</script>
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('Layouts.AdminMaster', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\laravel projects\AgricultureShopping\resources\views/Admin/Brandsalechart.blade.php ENDPATH**/ ?>
